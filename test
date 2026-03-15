@@ -1,0 +1,78 @@
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+-- [[ CONFIGURATION ]] --
+local CurrentVersion = "1.0" -- The version of THIS script
+local VersionSource = "YOUR_RAW_LINK_HERE" -- The link to your online version text
+
+-- [[ FUNCTION TO FETCH LATEST VERSION ]] --
+local function GetLatestVersion()
+    local success, result = pcall(function()
+        return game:HttpGet(VersionSource)
+    end)
+    if success then
+        return result:gsub("%s+", "") -- Removes any accidental spaces
+    end
+    return CurrentVersion -- Fallback if internet fails
+end
+
+local Latest = GetLatestVersion()
+
+-- [[ UI GENERATOR ]] --
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "Nexus_System"
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 350, 0, 200)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.BorderSizePixel = 0
+Instance.new("UICorner", MainFrame)
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+
+-- [[ LOGIC CHECK ]] --
+if Latest == CurrentVersion then
+    -- SHOW THE ACTUAL CHEAT MENU
+    Title.Text = "NEXUS V: ACTIVE"
+    Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+    
+    local Status = Instance.new("TextLabel", MainFrame)
+    Status.Size = UDim2.new(1, 0, 0, 100)
+    Status.Position = UDim2.new(0, 0, 0, 60)
+    Status.Text = "Welcome, User.\nVersion " .. CurrentVersion .. " is authorized."
+    Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Status.BackgroundTransparency = 1
+    Status.TextSize = 16
+
+else
+    -- SHOW THE "DOWNLOAD NEW" MENU
+    Title.Text = "UPDATE REQUIRED"
+    Title.TextColor3 = Color3.fromRGB(255, 50, 80)
+
+    local Warning = Instance.new("TextLabel", MainFrame)
+    Warning.Size = UDim2.new(0.9, 0, 0, 60)
+    Warning.Position = UDim2.new(0.05, 0, 0.25, 0)
+    Warning.Text = "You are using v" .. CurrentVersion .. "\nPlease download v" .. Latest
+    Warning.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Warning.BackgroundTransparency = 1
+    Warning.TextWrapped = true
+
+    local GetBtn = Instance.new("TextButton", MainFrame)
+    GetBtn.Size = UDim2.new(0.8, 0, 0, 40)
+    GetBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+    GetBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 80)
+    GetBtn.Text = "GET NEW VERSION"
+    GetBtn.TextColor3 = Color3.new(1, 1, 1)
+    GetBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", GetBtn)
+
+    GetBtn.MouseButton1Click:Connect(function()
+        setclipboard("https://nexusfive.netlify.app/")
+        GetBtn.Text = "LINK COPIED!"
+    end)
+end
