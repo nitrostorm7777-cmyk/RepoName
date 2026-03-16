@@ -2,75 +2,65 @@ local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 
 -- [[ CONFIGURATION ]] --
-local CurrentVersion = "1.0" -- The version of THIS script
-local VersionSource = "YOUR_RAW_LINK_HERE" -- The link to your online version text
+local CurrentVersion = "1.0" 
+-- Using the direct raw path for better compatibility
+local VersionSource = "https://raw.githubusercontent.com/nitrostorm7777-cmyk/RepoName/main/test"
 
--- [[ FUNCTION TO FETCH LATEST VERSION ]] --
+-- [[ THE "ULTRA-CLEAN" FETCH ]] --
 local function GetLatestVersion()
+    local cacheBuster = "?t=" .. tick()
     local success, result = pcall(function()
-        return game:HttpGet(VersionSource)
+        return game:HttpGet(VersionSource .. cacheBuster)
     end)
+    
     if success then
-        return result:gsub("%s+", "") -- Removes any accidental spaces
+        -- This regex removes everything except letters, numbers, and dots
+        local cleaned = result:gsub("[^%w%.]", "") 
+        return cleaned:lower()
     end
-    return CurrentVersion -- Fallback if internet fails
+    return "offline"
 end
 
 local Latest = GetLatestVersion()
 
--- [[ UI GENERATOR ]] --
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "Nexus_System"
+-- [[ UI SYSTEM ]] --
+if CoreGui:FindFirstChild("Nexus_Auth") then CoreGui.Nexus_Auth:Destroy() end
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 350, 0, 200)
-MainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-MainFrame.BorderSizePixel = 0
-Instance.new("UICorner", MainFrame)
+local ScreenGui = Instance.new("ScreenGui", CoreGui); ScreenGui.Name = "Nexus_Auth"
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 360, 0, 200); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5); Main.BackgroundColor3 = Color3.fromRGB(8, 8, 10); Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+local Stroke = Instance.new("UIStroke", Main); Stroke.Thickness = 2
 
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50); Title.BackgroundTransparency = 1; Title.Font = Enum.Font.GothamBold; Title.TextSize = 18; Title.Position = UDim2.new(0, 0, 0, 10)
 
--- [[ LOGIC CHECK ]] --
-if Latest == CurrentVersion then
-    -- SHOW THE ACTUAL CHEAT MENU
-    Title.Text = "NEXUS V: ACTIVE"
-    Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+local Info = Instance.new("TextLabel", Main)
+Info.Size = UDim2.new(0.9, 0, 0, 40); Info.Position = UDim2.new(0.05, 0, 0.35, 0); Info.BackgroundTransparency = 1; Info.Font = Enum.Font.Gotham; Info.TextSize = 14; Info.TextColor3 = Color3.fromRGB(180, 180, 180)
+
+-- [[ FINAL COMPARISON LOGIC ]] --
+if Latest == CurrentVersion:lower() then
+    -- MATCH FOUND
+    Stroke.Color = Color3.fromRGB(0, 255, 150)
+    Title.TextColor3 = Color3.fromRGB(0, 255, 150)
+    Title.Text = "AUTHENTICATION SUCCESS"
+    Info.Text = "Nexus V Version " .. CurrentVersion .. " is verified."
     
-    local Status = Instance.new("TextLabel", MainFrame)
-    Status.Size = UDim2.new(1, 0, 0, 100)
-    Status.Position = UDim2.new(0, 0, 0, 60)
-    Status.Text = "Welcome, User.\nVersion " .. CurrentVersion .. " is authorized."
-    Status.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Status.BackgroundTransparency = 1
-    Status.TextSize = 16
-
+    task.delay(2, function() ScreenGui:Destroy() end)
+    -- Your main script would go here
 else
-    -- SHOW THE "DOWNLOAD NEW" MENU
-    Title.Text = "UPDATE REQUIRED"
-    Title.TextColor3 = Color3.fromRGB(255, 50, 80)
-
-    local Warning = Instance.new("TextLabel", MainFrame)
-    Warning.Size = UDim2.new(0.9, 0, 0, 60)
-    Warning.Position = UDim2.new(0.05, 0, 0.25, 0)
-    Warning.Text = "You are using v" .. CurrentVersion .. "\nPlease download v" .. Latest
-    Warning.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Warning.BackgroundTransparency = 1
-    Warning.TextWrapped = true
-
-    local GetBtn = Instance.new("TextButton", MainFrame)
-    GetBtn.Size = UDim2.new(0.8, 0, 0, 40)
-    GetBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
-    GetBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 80)
-    GetBtn.Text = "GET NEW VERSION"
-    GetBtn.TextColor3 = Color3.new(1, 1, 1)
-    GetBtn.Font = Enum.Font.GothamBold
+    -- NO MATCH
+    Stroke.Color = Color3.fromRGB(255, 50, 50)
+    Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Title.Text = "VERSION MISMATCH"
+    
+    -- This helps you see EXACTLY what it's comparing
+    Info.Text = "Local: [" .. CurrentVersion .. "] vs Server: [" .. tostring(Latest) .. "]"
+    
+    local GetBtn = Instance.new("TextButton", Main)
+    GetBtn.Size = UDim2.new(0.8, 0, 0, 40); GetBtn.Position = UDim2.new(0.1, 0, 0.65, 0); GetBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50); GetBtn.Font = Enum.Font.GothamBold; GetBtn.TextColor3 = Color3.new(1,1,1); GetBtn.Text = "COPY UPDATE LINK"
     Instance.new("UICorner", GetBtn)
-
+    
     GetBtn.MouseButton1Click:Connect(function()
         setclipboard("https://nexusfive.netlify.app/")
         GetBtn.Text = "LINK COPIED!"
