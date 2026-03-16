@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 
 -- [[ CONFIGURATION ]] --
-local CurrentVersion = "1.0" 
+local CurrentVersion = "2.0" 
 local VersionSource = "https://raw.githubusercontent.com/nitrostorm7777-cmyk/RepoName/main/test"
 
 local function GetLatestVersion()
