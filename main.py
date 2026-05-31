@@ -5,16 +5,14 @@ from discord.ext import commands
 from datetime import datetime
 
 # --- CONFIGURATION ---
-# Hardcoded token config inside your private repo
 BOT_TOKEN = "MTUxMDQ1NjE2NjcwOTQ2MTA0Mw.GmjkOn.Q72zPZqT8kaCyRs3-wLOacvXZkSYu_mVtKG_xs"
 
-# Render handles files relative to the current workspace directory
+# FIX: Uses the current folder where your app runs on Render instead of the system home folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(BASE_DIR, "chat_history.json")
 
-# Automatically generate a backup database structure if the JSON file is missing
 if not os.path.exists(HISTORY_FILE):
-    print("[NEXUS SYSTEM INFO] chat_history.json not found. Initializing empty log database.")
+    print("[NEXUS SYSTEM INFO] Creating fresh chat_history.json database...")
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump([], f)
 
@@ -34,6 +32,7 @@ async def on_ready():
 @bot.command(name="search")
 async def search_logs(ctx, *, query: str):
     query = query.lower().strip()
+    
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             logs = json.load(f)
@@ -42,6 +41,7 @@ async def search_logs(ctx, *, query: str):
         return
 
     matched_results = [item["raw"] for item in logs if query in item["text"].lower() or query in item["user"].lower()]
+
     if not matched_results:
         await ctx.send(f"🔍 No historical matches found for query string: `{query}`")
         return
@@ -57,9 +57,12 @@ async def search_logs(ctx, *, query: str):
     embed.set_footer(text=f"Displaying {len(recent_matches)} entries | Total Matches Found: {len(matched_results)}")
     await ctx.send(embed=embed)
 
+
 @bot.command(name="user")
 async def user_logs(ctx, username: str, date_filter: str = None):
+    """Fetches historical user logs, with an optional date filter query parameter (e.g., !user username 5/31/2026)"""
     target_user = username.lower().strip()
+    
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             logs = json.load(f)
@@ -68,6 +71,7 @@ async def user_logs(ctx, username: str, date_filter: str = None):
         return
 
     matched_messages = []
+    
     cleaned_date = None
     if date_filter:
         try:
@@ -82,6 +86,7 @@ async def user_logs(ctx, username: str, date_filter: str = None):
                 log_date = item.get("date")
                 if not log_date or log_date != cleaned_date:
                     continue 
+            
             matched_messages.append(item["raw"])
 
     if not matched_messages:
@@ -105,6 +110,7 @@ async def user_logs(ctx, username: str, date_filter: str = None):
     )
     embed.set_footer(text=f"Showing last {len(recent_logs)} messages out of {len(matched_messages)} total entries.")
     await ctx.send(embed=embed)
+
 
 if __name__ == "__main__":
     bot.run(BOT_TOKEN)
