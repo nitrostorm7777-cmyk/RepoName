@@ -5,13 +5,16 @@ from discord.ext import commands
 from datetime import datetime
 
 # --- CONFIGURATION ---
-# SAFE: The raw token string is gone. It now reads dynamically from the server environment.
-BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
+# Hardcoded token config inside your private repo
+BOT_TOKEN = "MTUxMDQ1NjE2NjcwOTQ2MTA0Mw.GmjkOn.Q72zPZqT8kaCyRs3-wLOacvXZkSYu_mVtKG_xs"
 
+# Render handles files relative to the current workspace directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(BASE_DIR, "chat_history.json")
 
+# Automatically generate a backup database structure if the JSON file is missing
 if not os.path.exists(HISTORY_FILE):
+    print("[NEXUS SYSTEM INFO] chat_history.json not found. Initializing empty log database.")
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump([], f)
 
@@ -104,7 +107,4 @@ async def user_logs(ctx, username: str, date_filter: str = None):
     await ctx.send(embed=embed)
 
 if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is missing!")
-    else:
-        bot.run(BOT_TOKEN)
+    bot.run(BOT_TOKEN)
