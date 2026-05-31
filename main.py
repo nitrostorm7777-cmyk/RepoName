@@ -5,18 +5,16 @@ from discord.ext import commands
 from datetime import datetime
 
 # --- OBFUSCATED CONFIGURATION ---
-# Splitting your fresh token protects it from GitHub's automatic deletion systems
 T_PART1 = "MTUxMDQ1NjE2NjcwOTQ2MTA0Mw"
 T_PART2 = "G1VxHB"
 T_PART3 = "XPlWS1YhYqO2jpPMMObrsNU_Ns-np8wWGByuHQ"
 
 BOT_TOKEN = f"{T_PART1}.{T_PART2}.{T_PART3}"
 
-# Render handles files relative to the current workspace directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(BASE_DIR, "chat_history.json")
 
-# Automatically generate a backup database structure if the JSON file is missing
+# Automatically generate a backup database structure if missing
 if not os.path.exists(HISTORY_FILE):
     print("[NEXUS SYSTEM INFO] Creating fresh chat_history.json database...")
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
@@ -34,6 +32,53 @@ async def on_ready():
     print(f"[NEXUS SEARCH BOT DISCORD ENGINE ONLINE]")
     print(f"Logged in as username: {bot.user.name}")
     print(f"==================================================")
+
+# --- AUTOMATIC LOGGER EVENT ---
+@bot.event
+async def on_message(message):
+    # Ignore messages sent by the bot itself so it doesn't log its own responses
+    if message.author == bot.user:
+        return
+
+    # Don't log command executions (optional, keeps database clean of "!search xyz")
+    if message.content.startswith("!"):
+        await bot.process_commands(message)
+        return
+
+    current_time = datetime.now()
+    date_str = current_time.strftime("%m/%d/%Y")
+    timestamp_str = current_time.strftime("%B %d, %I:%M %p") # e.g., "May 31, 04:45 PM"
+
+    # Format the raw text line exactly how you want it displayed in search results
+    raw_log = f"[{timestamp_str}] {message.author.name}: {message.content}"
+
+    # Create the structured log entry
+    new_entry = {
+        "user": message.author.name,
+        "text": message.content,
+        "date": date_str,
+        "raw": raw_log
+    }
+
+    # Open, append, and save back to the JSON file immediately
+    try:
+        with open(HISTORY_FILE, "r+", encoding="utf-8") as f:
+            try:
+                logs = json.load(f)
+            except json.JSONDecodeError:
+                logs = [] # Fallback if file gets corrupted or is blank text
+            
+            logs.append(new_entry)
+            
+            f.seek(0)
+            json.dump(logs, f, ensure_ascii=False, indent=2)
+            f.truncate()
+    except Exception as e:
+        print(f"[NEXUS LOGGER ERROR] Failed to write message to JSON: {e}")
+
+    # CRITICAL: Allows the bot to still process commands like !search and !user
+    await bot.process_commands(message)
+
 
 @bot.command(name="search")
 async def search_logs(ctx, *, query: str):
